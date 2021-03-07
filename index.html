@@ -7,7 +7,7 @@
     <script>
       const go = new Go();
       WebAssembly.instantiateStreaming(
-        fetch("main.wasm"),
+        fetch("Codebook.wasm"),
         go.importObject
       ).then((result) => {
         go.run(result.instance);
@@ -26,8 +26,10 @@
         const script = document.getElementById("script");
         const resDiv = document.getElementById("res");
 
+        const vm = wasm_create_vm();
+
         script.addEventListener("input", (e) => {
-          let res = cb_execute(script.value);
+          let res = vm.execute(script.value);
 
           resDiv.innerHTML = res;
         });

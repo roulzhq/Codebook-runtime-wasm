@@ -13,24 +13,36 @@ func getElementByID(id string) js.Value {
 	return document.Call("getElementById", id)
 }
 
-func executeJs(this js.Value, p []js.Value) interface{} {
-	input := p[0].String()
+func CreateVm() js.Func {
+	return js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		vm := map[string]interface{}{
+			"execute": js.FuncOf(func(this js.Value, p []js.Value) interface{} {
+				input := p[0].String()
+				value, err := vm.Run(input)
 
-	value, err := vm.Run(input)
+				if err != nil {
+					return js.ValueOf(err.Error())
+				}
 
-	if err != nil {
-		return js.ValueOf(err.Error())
-	}
+				s, _ := value.ToString()
 
-	s, _ := value.ToString()
+				return js.ValueOf(s)
+			}),
+			"clear": js.FuncOf(func(this js.Value, p []js.Value) interface{} {
+				vm = otto.New()
 
-	return js.ValueOf(s)
+				return true
+			}),
+		}
+
+		return vm
+	})
 }
 
 func main() {
 	quit := make(chan struct{}, 0)
 
-	js.Global().Set("cb_execute", js.FuncOf(executeJs))
+	js.Global().Set("wasm_create_vm", CreateVm())
 
 	<-quit
 }
